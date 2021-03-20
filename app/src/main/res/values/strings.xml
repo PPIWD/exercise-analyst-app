@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">ExerciseAnalyst</string>
+    <string name="notification_info">Exercise Analyst is running</string>
+    <string name="stop_meta_motion_service">Stop meta motion service</string>
+    <string name="start_meta_motion_service">Start meta motion service</string>
+    <string name="wipe_db">Wipe DB - use with caution</string>
+    <string name="device_mac_address_hint">AB:CD:EF:GH:IJ:01</string>
+    <string name="device_mac_address">MetaMotion device MAC address</string>
+    <string name="permissions_dialog_rationale">Location permissions is required for BLE feature</string>
+    <string name="permissions_dialog_allow">Allow</string>
+    <string name="permissions_dialog_deny">Deny</string>
+</resources>
