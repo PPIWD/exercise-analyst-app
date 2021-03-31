@@ -71,11 +71,13 @@ public class MetaMotionService extends Service implements FrontendControl {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String deviceMacAddress = intent.getStringExtra(Constants.DEVICE_MAC_ADDRESS_KEY);
+        String activity = intent.getStringExtra(Constants.ACTIVITY_NAME_KEY);
+        int numberOfRepetitions = intent.getIntExtra(Constants.REPETITIONS_COUNT_KEY, 0);
         Log.i("MetaMotionService", "onStartCommand() device mac: " + deviceMacAddress);
         createNotificationChannel();
         startForeground(Constants.META_MOTION_SERVICE_NOTIFICATION_ID, buildNotification());
         acquirePartialWakeLock();
-        bindMetaMotionBleService(deviceMacAddress);
+        bindMetaMotionBleService(deviceMacAddress, activity, numberOfRepetitions);
         return START_NOT_STICKY;
     }
 
@@ -88,9 +90,9 @@ public class MetaMotionService extends Service implements FrontendControl {
             wakeLock.acquire();
     }
 
-    private void bindMetaMotionBleService(String deviceMacAddress) {
+    private void bindMetaMotionBleService(String deviceMacAddress, String activity, int numberOfRepetitions) {
         metaMotionCtrl = new MetaMotionCtrl(
-                this, deviceMacAddress, this, measurementsRepository);
+                this, deviceMacAddress, this, measurementsRepository, activity, numberOfRepetitions);
         btleServiceConnection = new BtleServiceConnection(metaMotionCtrl);
         bindService(
                 new Intent(this, BtleService.class),

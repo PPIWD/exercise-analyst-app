@@ -15,6 +15,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ExerciseAnalyst">
+        <activity
+            android:name=".activities.SessionTaggingActivity"
+            android:label="@string/title_activity_session_tagging">
+        </activity>
         <activity android:name=".activities.DataCollectionActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

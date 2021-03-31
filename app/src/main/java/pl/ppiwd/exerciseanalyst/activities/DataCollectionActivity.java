@@ -1,6 +1,7 @@
 package pl.ppiwd.exerciseanalyst.activities;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +13,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.AlertDialog;
@@ -37,11 +41,15 @@ public class DataCollectionActivity extends AppCompatActivity {
     private LocalBroadcastManager localBroadcastManager;
     private boolean isMetaMotionServiceAlive;
     private MetaMotionServiceConnection metaMotionServiceConnection;
+    private ActivityResultLauncher<Intent> sessionTaggingActivityResultLauncher;
 
     private EditText etDeviceMacAddress;
     private Button btnStartMetaMotionService;
     private Button btnStopMetaMotionService;
     private Button btnWipeDb;
+
+    private String activityName;
+    private int repetitionsCount;
 
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
@@ -75,6 +83,9 @@ public class DataCollectionActivity extends AppCompatActivity {
         intentFilter.addAction(BroadcastMsgs.METAMOTION_SERVICE_ALIVE_RESP);
         intentFilter.addAction(BroadcastMsgs.ACTIVITY_BROADCAST_INTENT_ACTION);
         localBroadcastManager.registerReceiver(broadcastReceiver, intentFilter);
+        sessionTaggingActivityResultLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> handleSessionTaggingActivityResult(result));
     }
 
     private void initViews() {
@@ -83,10 +94,7 @@ public class DataCollectionActivity extends AppCompatActivity {
         btnStartMetaMotionService = findViewById(R.id.btn_start_meta_motion);
         btnStopMetaMotionService = findViewById(R.id.btn_stop_meta_motion);
         btnWipeDb = findViewById(R.id.btn_wipe_db);
-        btnStartMetaMotionService.setOnClickListener(
-                view -> DataCollectionActivityPermissionsDispatcher
-                        .startMetaMotionServiceWithPermissionCheck(this)
-        );
+        btnStartMetaMotionService.setOnClickListener(view -> startSessionTaggingActivity() );
         btnStopMetaMotionService.setOnClickListener(view -> stopMetaMotionService());
         btnWipeDb.setOnClickListener(view -> WipeDatabase.wipe(this, Constants.ROOM_DB_NAME));
     }
@@ -174,6 +182,8 @@ public class DataCollectionActivity extends AppCompatActivity {
 
         Intent serviceIntent = new Intent(this, MetaMotionService.class);
         serviceIntent.putExtra(Constants.DEVICE_MAC_ADDRESS_KEY, deviceMacAddress);
+        serviceIntent.putExtra(Constants.ACTIVITY_NAME_KEY, activityName);
+        serviceIntent.putExtra(Constants.REPETITIONS_COUNT_KEY, repetitionsCount);
         ContextCompat.startForegroundService(this, serviceIntent);
     }
 
@@ -195,6 +205,22 @@ public class DataCollectionActivity extends AppCompatActivity {
         Intent serviceIntent = new Intent(this, MetaMotionService.class);
         unbindMetaMotionService();
         stopService(serviceIntent);
+    }
+
+    private void startSessionTaggingActivity() {
+        sessionTaggingActivityResultLauncher.launch(new Intent(this, SessionTaggingActivity.class));
+    }
+
+    private void handleSessionTaggingActivityResult(ActivityResult result) {
+        if (result.getResultCode() == Activity.RESULT_OK) {
+            Intent data = result.getData();
+            activityName = data.getStringExtra(Constants.ACTIVITY_NAME_KEY);
+            repetitionsCount = data.getIntExtra(Constants.REPETITIONS_COUNT_KEY, 0);
+
+            DataCollectionActivityPermissionsDispatcher.startMetaMotionServiceWithPermissionCheck(this);
+        } else if (result.getResultCode() == Activity.RESULT_CANCELED) {
+            Log.i("DataCollectionActivity","canceled");
+        }
     }
 
     @Override

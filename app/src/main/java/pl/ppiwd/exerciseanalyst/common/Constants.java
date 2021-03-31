@@ -8,4 +8,6 @@ public class Constants {
     public static final String DEVICE_MAC_ADDRESS_KEY = "DEVICE_MAC_ADDRESS_KEY";
     public static final String DEVICE_MAC_ADDRESS_SHARED_PREFS_KEY =
             "DEVICE_MAC_ADDRESS_SHARED_PREFS_KEY";
+    public static final String ACTIVITY_NAME_KEY = "ACTIVITY_NAME_KEY";
+    public static final String REPETITIONS_COUNT_KEY = "REPETITIONS_COUNT_KEY";
 }
