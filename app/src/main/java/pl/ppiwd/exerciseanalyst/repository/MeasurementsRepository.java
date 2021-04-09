@@ -40,11 +40,11 @@ public class MeasurementsRepository {
             measuremntsInsertionDisposable.dispose();
     }
 
-    public ConnectableObservable<Long> beginSession() {
+    public ConnectableObservable<Long> beginSession(String activity, int numberOfRepetitions) {
         Log.i("MeasurementsRepository", "beginSession()");
 
         ConnectableObservable<Long> idOfInsertedSessionObservable =
-                sessionDao.insertSession(new SessionEntity("NONE", 0))
+                sessionDao.insertSession(new SessionEntity(activity, numberOfRepetitions))
                         .subscribeOn(Schedulers.io())
                         .toObservable().publish();
 

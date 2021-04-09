@@ -20,6 +20,8 @@ public class MetaMotionCtrl implements ConnectionEventListener {
     private String deviceMacAddress;
     private FrontendControl frontendControl;
     private MeasurementsRepository measurementsRepository;
+    private String activity;
+    private int numberOfRepetitions;
     private MetaWearBoard board;
     private SensorsCtrl sensorsCtrl;
     private Disposable sessionBeginDisposable;
@@ -28,11 +30,15 @@ public class MetaMotionCtrl implements ConnectionEventListener {
             Context context,
             String deviceMacAddress,
             FrontendControl frontendControl,
-            MeasurementsRepository measurementsRepository) {
+            MeasurementsRepository measurementsRepository,
+            String activity,
+            int numberOfRepetitions) {
         this.context = context;
         this.deviceMacAddress = deviceMacAddress;
         this.frontendControl = frontendControl;
         this.measurementsRepository = measurementsRepository;
+        this.activity = activity;
+        this.numberOfRepetitions = numberOfRepetitions;
     }
 
     public void onDestroy() {
@@ -73,7 +79,7 @@ public class MetaMotionCtrl implements ConnectionEventListener {
         Log.i("MetaMotionCtrl", "onConnectionSuccessful() thread: "
                 + Thread.currentThread());
 
-        ConnectableObservable<Long> beginSessionObservable = measurementsRepository.beginSession();
+        ConnectableObservable<Long> beginSessionObservable = measurementsRepository.beginSession(activity, numberOfRepetitions);
         sessionBeginDisposable = beginSessionObservable.subscribe(sessionId -> {
             Log.i("MetaMotionCtrl", "onConnectionSuccessful() success in observable." +
                     " Thread: " + Thread.currentThread());
