@@ -64,8 +64,8 @@ public class ServerConnection {
             Log.i("ServerConnection", "Querying local data.");
             SessionWithMeasurements measurements = ((Single<SessionWithMeasurements>) param).blockingGet();
             Log.i("ServerConnection", "Local data queried, serializing.");
-            Gson gson = new Gson();
-            String jsonStr = gson.toJson(measurements);
+            SessionSerializer serializer = new SessionSerializer(measurements);
+            String json = serializer.serialize();
 
             RequestQueue queue = Volley.newRequestQueue(context);
             StringRequest stringRequest = new StringRequest(
@@ -81,7 +81,7 @@ public class ServerConnection {
                     }) {
                 @Override
                 public byte[] getBody() {
-                    return jsonStr.getBytes();
+                    return json.getBytes();
                 }
             };
 
