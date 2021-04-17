@@ -5,16 +5,18 @@ import androidx.room.Transaction;
 
 import java.util.List;
 
+import io.reactivex.rxjava3.core.Single;
 import pl.ppiwd.exerciseanalyst.persistence.entities.AccelerometerMeasEntity;
 import pl.ppiwd.exerciseanalyst.persistence.entities.AltitudeMeasEntity;
 import pl.ppiwd.exerciseanalyst.persistence.entities.AmbientLightMeasEntity;
 import pl.ppiwd.exerciseanalyst.persistence.entities.GyroscopeMeasEntity;
 import pl.ppiwd.exerciseanalyst.persistence.entities.MagnetometerMeasEntity;
 import pl.ppiwd.exerciseanalyst.persistence.entities.PressureMeasEntity;
+import pl.ppiwd.exerciseanalyst.persistence.entities.SessionWithMeasurements;
 import pl.ppiwd.exerciseanalyst.persistence.entities.TemperatureMeasEntity;
 
 @Dao
-public abstract class MeasurementsDao implements AccelerometerDao, AltitudeDao, AmbientLightDao, GyroscopeDao, MagnetometerDao, PressureDao, TemperatureDao {
+public abstract class MeasurementsDao implements AccelerometerDao, AltitudeDao, AmbientLightDao, GyroscopeDao, MagnetometerDao, PressureDao, TemperatureDao, SessionDao {
 
     @Transaction
     public void insertMultipleMeasurements(
@@ -39,5 +41,9 @@ public abstract class MeasurementsDao implements AccelerometerDao, AltitudeDao, 
             insertPressureMeasurements(pressureMeasEntities);
         if (temperatureMeasEntities != null && temperatureMeasEntities.size() > 0)
             insertTemperatureMeasurements(temperatureMeasEntities);
+    }
+
+    public Single<SessionWithMeasurements> getMeasurementEntitiesForLastSession() {
+        return getLastSession();
     }
 }

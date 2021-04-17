@@ -31,8 +31,11 @@ import permissions.dispatcher.PermissionRequest;
 import permissions.dispatcher.RuntimePermissions;
 import pl.ppiwd.exerciseanalyst.R;
 import pl.ppiwd.exerciseanalyst.activities.utils.MetaMotionServiceConnection;
+import pl.ppiwd.exerciseanalyst.activities.utils.ServerConnection;
 import pl.ppiwd.exerciseanalyst.common.BroadcastMsgs;
 import pl.ppiwd.exerciseanalyst.common.Constants;
+import pl.ppiwd.exerciseanalyst.persistence.MeasurementsDatabase;
+import pl.ppiwd.exerciseanalyst.persistence.dao.MeasurementsDao;
 import pl.ppiwd.exerciseanalyst.services.metamotion.MetaMotionService;
 import pl.ppiwd.exerciseanalyst.utils.WipeDatabase;
 
@@ -41,6 +44,7 @@ public class DataCollectionActivity extends AppCompatActivity {
     private LocalBroadcastManager localBroadcastManager;
     private boolean isMetaMotionServiceAlive;
     private MetaMotionServiceConnection metaMotionServiceConnection;
+    private ServerConnection serverConnection;
     private ActivityResultLauncher<Intent> sessionTaggingActivityResultLauncher;
 
     private EditText etDeviceMacAddress;
@@ -86,6 +90,15 @@ public class DataCollectionActivity extends AppCompatActivity {
         sessionTaggingActivityResultLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> handleSessionTaggingActivityResult(result));
+
+        MeasurementsDao measurements =
+                MeasurementsDatabase.getInstance(getApplicationContext()).measurementsDao();
+        serverConnection = new ServerConnection(measurements,
+                () -> {
+                    Toast.makeText(this, "Data synced with remote.", Toast.LENGTH_SHORT).show();
+                }, () -> {
+            Toast.makeText(this, "Could not sync with remote. Try again.", Toast.LENGTH_LONG).show();
+        });
     }
 
     private void initViews() {
@@ -124,6 +137,7 @@ public class DataCollectionActivity extends AppCompatActivity {
     public void onDestroy() {
         Log.i("DataCollectionActivity()", "onDestroy()");
         localBroadcastManager.unregisterReceiver(broadcastReceiver);
+        serverConnection.cancelRequest();
         super.onDestroy();
     }
 
@@ -205,6 +219,7 @@ public class DataCollectionActivity extends AppCompatActivity {
         Intent serviceIntent = new Intent(this, MetaMotionService.class);
         unbindMetaMotionService();
         stopService(serviceIntent);
+        serverConnection.sendMeasurements(getApplicationContext());
     }
 
     private void startSessionTaggingActivity() {

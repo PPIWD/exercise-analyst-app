@@ -17,4 +17,8 @@ public interface SessionDao {
     @Transaction
     @Query("SELECT * FROM sessions WHERE id = :sessionId")
     public Single<SessionWithMeasurements> getSessionWithMeasurements(long sessionId);
+
+    @Transaction
+    @Query("SELECT * FROM sessions ORDER BY id DESC LIMIT 1")
+    public Single<SessionWithMeasurements> getLastSession();
 }
