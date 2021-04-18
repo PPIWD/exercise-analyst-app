@@ -1,19 +1,14 @@
 package pl.ppiwd.exerciseanalyst.activities;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
-import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.Optional;
@@ -26,7 +21,13 @@ public class SessionTaggingActivity extends AppCompatActivity {
     private EditText numberOfRepetitionsInput;
     private Button startSessionButton;
 
-    private static final String[] activities = new String[]{"Push ups", "Squats"};
+    private static final String[] activities = new String[]{
+            "Walking",
+            "Frontal elevation of arms",
+            "Jump front & back",
+            "Squats",
+            "Push ups"
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

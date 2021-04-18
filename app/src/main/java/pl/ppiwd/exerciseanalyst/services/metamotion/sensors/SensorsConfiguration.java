@@ -5,6 +5,7 @@ import com.mbientlab.metawear.module.BarometerBosch;
 import com.mbientlab.metawear.module.GyroBmi160;
 import com.mbientlab.metawear.module.MagnetometerBmm150;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class SensorsConfiguration {
@@ -72,12 +73,13 @@ public class SensorsConfiguration {
             AmbientLightCfgConst.MEASUREMENT_RATE
     );
 
-    public static final Map<SensorType, SensorCfg> usedSensors = Map.of(
-            SensorType.ACCELEROMETER, accelerometerCfg,
-            SensorType.GYROSCOPE, gyroscopeCfg,
-            SensorType.BAROMETER, barometerCfg,
-            SensorType.TEMPERATURE, thermometerCfg,
-            SensorType.MAGNETOMETER, magnetometerCfg,
-            SensorType.AMBIENT_LIGHT, ambientLightCfg
-    );
+
+    private static Map<SensorType, SensorCfg> createSensorsCfg() {
+        Map<SensorType, SensorCfg> cfg = new HashMap<>();
+        cfg.put(SensorType.ACCELEROMETER, accelerometerCfg);
+        cfg.put(SensorType.GYROSCOPE, gyroscopeCfg);
+        return cfg;
+    }
+
+    public static final Map<SensorType, SensorCfg> usedSensors = createSensorsCfg();
 }
