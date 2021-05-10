@@ -9,6 +9,9 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -37,6 +40,8 @@ import pl.ppiwd.exerciseanalyst.common.Constants;
 import pl.ppiwd.exerciseanalyst.persistence.MeasurementsDatabase;
 import pl.ppiwd.exerciseanalyst.persistence.dao.MeasurementsDao;
 import pl.ppiwd.exerciseanalyst.services.metamotion.MetaMotionService;
+import pl.ppiwd.exerciseanalyst.utils.OperationResult;
+import pl.ppiwd.exerciseanalyst.utils.RequestOperationResult;
 import pl.ppiwd.exerciseanalyst.utils.WipeDatabase;
 
 @RuntimePermissions
@@ -93,12 +98,15 @@ public class DataCollectionActivity extends AppCompatActivity {
 
         MeasurementsDao measurements =
                 MeasurementsDatabase.getInstance(getApplicationContext()).measurementsDao();
-        serverConnection = new ServerConnection(measurements,
-                () -> {
-                    Toast.makeText(this, "Data synced with remote.", Toast.LENGTH_SHORT).show();
-                }, () -> {
+        serverConnection = new ServerConnection(measurements, this::onMeasurementsUpload);
+    }
+
+    private void onMeasurementsUpload(OperationResult operationResult) {
+        RequestOperationResult result = (RequestOperationResult) operationResult;
+        if(result.isSuccessful())
+            Toast.makeText(this, "Data synced with remote.", Toast.LENGTH_SHORT).show();
+        else
             Toast.makeText(this, "Could not sync with remote. Try again.", Toast.LENGTH_LONG).show();
-        });
     }
 
     private void initViews() {
@@ -236,6 +244,41 @@ public class DataCollectionActivity extends AppCompatActivity {
         } else if (result.getResultCode() == Activity.RESULT_CANCELED) {
             Log.i("DataCollectionActivity","canceled");
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.data_collection_activity_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.switch_account_data_col_act:
+                switchAccount();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void switchAccount() {
+        if(isMetaMotionServiceRunning()) {
+            Toast.makeText(
+                    this,
+                    "Can't switch account while service is running",
+                    Toast.LENGTH_SHORT
+            ).show();
+            return;
+        }
+        Intent switchAccountIntent = new Intent(this, InitialActivity.class);
+        switchAccountIntent.putExtra(Constants.SHOULD_WIPE_ACCESS_TOKEN_KEY, true);
+        switchAccountIntent.setFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(switchAccountIntent);
+        finish();
     }
 
     @Override
