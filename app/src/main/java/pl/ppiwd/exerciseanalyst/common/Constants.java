@@ -11,4 +11,6 @@ public class Constants {
     public static final String ACTIVITY_NAME_KEY = "ACTIVITY_NAME_KEY";
     public static final String REPETITIONS_COUNT_KEY = "REPETITIONS_COUNT_KEY";
     public static final int HTTP_REQ_TIMEOUT_MS = 10000;
+    public static final String ACCESS_TOKEN_SHARED_PREFS_KEY = "AUTH_TOKEN_SHARED_PREFS_KEY";
+    public static final String SHOULD_WIPE_ACCESS_TOKEN_KEY = "SHOULD_WIPE_ACCESS_TOKEN_KEY";
 }

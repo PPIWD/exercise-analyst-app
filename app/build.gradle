@@ -13,6 +13,8 @@ android {
         versionCode 1
         versionName "1.0"
         buildConfigField "String", 'SERVER_URL', '"http://pawelkob-002-site3.itempurl.com/api/measurements-dev"'
+        buildConfigField "String", 'SIGN_IN_URL', '"http://pawelkob-002-site3.itempurl.com/api/Auth/login"'
+        buildConfigField "String", 'SIGN_UP_URL', '"http://pawelkob-002-site3.itempurl.com/api/Auth/register"'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 

@@ -26,24 +26,23 @@ import io.reactivex.rxjava3.functions.Action;
 import io.reactivex.rxjava3.functions.Function;
 import pl.ppiwd.exerciseanalyst.BuildConfig;
 import pl.ppiwd.exerciseanalyst.common.Constants;
+import pl.ppiwd.exerciseanalyst.common.auth.TokenStore;
 import pl.ppiwd.exerciseanalyst.persistence.MeasurementSelectCommand;
 import pl.ppiwd.exerciseanalyst.persistence.dao.MeasurementsDao;
 import pl.ppiwd.exerciseanalyst.persistence.entities.SessionWithMeasurements;
 import pl.ppiwd.exerciseanalyst.utils.Command;
+import pl.ppiwd.exerciseanalyst.utils.OnOperationResult;
+import pl.ppiwd.exerciseanalyst.utils.VolleyJsonBodyRequest;
 
 public class ServerConnection {
     private MeasurementsDao measurementsDao;
     private CompletableFuture currentRequest;
-    private Runnable onSuccess;
-    private Runnable onError;
+    private OnOperationResult onOperationResult;
 
-    public ServerConnection(MeasurementsDao dao
-            , Runnable onSuccess
-            , Runnable onError) {
+    public ServerConnection(MeasurementsDao dao, OnOperationResult onOperationResult) {
         this.measurementsDao = dao;
         this.currentRequest = null;
-        this.onSuccess = onSuccess;
-        this.onError = onError;
+        this.onOperationResult = onOperationResult;
     }
 
     public void sendMeasurements(Context context) {
@@ -76,76 +75,16 @@ public class ServerConnection {
             SessionSerializer serializer = new SessionSerializer(measurements);
             String json = serializer.serialize();
 
-            RequestQueue queue = Volley.newRequestQueue(context);
-            StringRequest stringRequest = new StringRequest(
-                    Request.Method.POST,
-                    BuildConfig.SERVER_URL,
-                    response -> {
-                        try { onSuccess.run(); } catch(Throwable e) { }
-                        Log.i("ServerConnection", "Received response: " + response);
-                    },
-                    error -> {
-                        // Volley misinterprets response code 204 (No content) - below workaround
-                        // status code can't be checked as error's networkResponse field is null
-                        if(error instanceof TimeoutError) {
-                            Log.i(
-                                    "ServerConnection",
-                                    "Error timeout, let's hope it comes from misinterpreted 204." +
-                                            " Workaround applied. Data uploaded to server!"
-                            );
-                            try { onSuccess.run(); } catch(Throwable e) { }
-                        }
-                        else {
-                            try { onError.run(); } catch(Throwable e) { }
-                            Log.e("ServerConnection", error.toString());
-                        }
-                    }) {
+            VolleyJsonBodyRequest.Builder builder = new VolleyJsonBodyRequest.Builder(context);
+            VolleyJsonBodyRequest req = builder
+                    .setUrl(BuildConfig.SERVER_URL)
+                    .setOnOperationResult(onOperationResult)
+                    .setJsonBody(json)
+                    .withSecurityToken(TokenStore.getInstance().getAccessToken())
+                    .build();
 
-                @Override
-                protected Response<String> parseNetworkResponse(NetworkResponse response) {
-                    Log.i("ServerConnection", "Response status code: " + response.statusCode);
-                    return super.parseNetworkResponse(response);
-                }
+            req.execute();
 
-                @Override
-                protected VolleyError parseNetworkError(VolleyError volleyError) {
-                    NetworkResponse networkResponse = volleyError.networkResponse;
-                    if(networkResponse != null) {
-                        String body = new String(networkResponse.data, StandardCharsets.UTF_8);
-                        Log.i("ServerConnection",
-                                "Error status code: " + networkResponse.statusCode + "; Body: "
-                                        + body);
-                    }
-
-                    return super.parseNetworkError(volleyError);
-                }
-
-                @Override
-                public byte[] getBody() {
-                    return json.getBytes();
-                }
-
-                @Override
-                public String getBodyContentType() {
-                    return "application/json; charset=utf-8";
-                }
-
-                @Override
-                public Map<String, String> getHeaders() {
-                    HashMap<String, String> headers = new HashMap<>();
-                    return headers;
-                }
-            };
-
-            stringRequest.setRetryPolicy(new DefaultRetryPolicy(
-                    0,
-                    DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
-            ));
-
-            Log.i("ServerConnection",
-                    "Sending measurements to " + BuildConfig.SERVER_URL);
-            queue.add(stringRequest);
             return null;
         });
     }

@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">ExerciseAnalyst</string>
+    <string name="access_token_shared_preferences">access_token_shared_preferences</string>
     <string name="notification_info">Exercise Analyst is running</string>
     <string name="stop_meta_motion_service">Stop meta motion service</string>
     <string name="start_meta_motion_service">Start meta motion service</string>
@@ -10,4 +11,30 @@
     <string name="permissions_dialog_allow">Allow</string>
     <string name="permissions_dialog_deny">Deny</string>
     <string name="title_activity_session_tagging">SessionTaggingActivity</string>
+    <string name="welcome">Welcome to\nExercise Analyst</string>
+    <string name="sign_in">Sign In</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="email_address">Email address</string>
+    <string name="user_credentials_hint">Please provide your credentials</string>
+    <string name="email_hint">address@mail.com</string>
+    <string name="password">Password</string>
+    <string name="password_hint">Your secret password</string>
+    <string name="user_data_hint">Please provide your data for registration</string>
+    <string name="password_repeat">Repeat password</string>
+    <string name="height_cm">Height [cm]</string>
+    <string name="height_hint">180</string>
+    <string name="weight_hint">75</string>
+    <string name="weight_kg">Weight [kg]</string>
+    <string name="age">Age</string>
+    <string name="age_hint">28</string>
+    <string name="next_arrow"><![CDATA[>]]></string>
+    <string name="gender">Gender</string>
+    <string name="previous_arrow"><![CDATA[<]]></string>
+    <string name="switch_account">Switch account</string>
+
+    <string-array name="gender_items">
+        <item>Male</item>
+        <item>Female</item>
+    </string-array>
+
 </resources>
