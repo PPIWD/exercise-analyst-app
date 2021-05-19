@@ -56,6 +56,7 @@ public class DataCollectionActivity extends AppCompatActivity {
     private Button btnStartMetaMotionService;
     private Button btnStopMetaMotionService;
     private Button btnWipeDb;
+    private Button btnOpenWebView;
 
     private String activityName;
     private int repetitionsCount;
@@ -115,9 +116,12 @@ public class DataCollectionActivity extends AppCompatActivity {
         btnStartMetaMotionService = findViewById(R.id.btn_start_meta_motion);
         btnStopMetaMotionService = findViewById(R.id.btn_stop_meta_motion);
         btnWipeDb = findViewById(R.id.btn_wipe_db);
+        btnOpenWebView = findViewById(R.id.btn_open_webview);
+
         btnStartMetaMotionService.setOnClickListener(view -> startSessionTaggingActivity() );
         btnStopMetaMotionService.setOnClickListener(view -> stopMetaMotionService());
         btnWipeDb.setOnClickListener(view -> WipeDatabase.wipe(this, Constants.ROOM_DB_NAME));
+        btnOpenWebView.setOnClickListener(view -> openWebViewStats());
     }
 
     private void fillDeviceMacAddressEditTextFromSharedPrefs() {
@@ -244,6 +248,11 @@ public class DataCollectionActivity extends AppCompatActivity {
         } else if (result.getResultCode() == Activity.RESULT_CANCELED) {
             Log.i("DataCollectionActivity","canceled");
         }
+    }
+
+    private void openWebViewStats() {
+        Intent activity2Intent = new Intent(getApplicationContext(), WebViewStats.class);
+        startActivity(activity2Intent);
     }
 
     @Override
