@@ -188,7 +188,7 @@ public class DataCollectionActivity extends AppCompatActivity {
             return;
         }
 
-        String deviceMacAddress = etDeviceMacAddress.getText().toString();
+        String deviceMacAddress = etDeviceMacAddress.getText().toString().toUpperCase();
         if (deviceMacAddress.isEmpty()) {
             Toast.makeText(this, "Provide device mac address", Toast.LENGTH_LONG).show();
             return;
