@@ -11,7 +11,7 @@ import com.mbientlab.metawear.android.BtleService;
 import bolts.Continuation;
 
 public class MetaWearConnectionEstablisher {
-    private static final int MAX_TRIALS = 3;
+    private static final int MAX_TRIALS = 4;
     private static final int CONNECTION_DELAY_MS = 1500;
     private MetaWearBoard board;
     private String deviceMacAddress;
@@ -32,7 +32,7 @@ public class MetaWearConnectionEstablisher {
         this.context = context;
         this.serviceBinder = serviceBinder;
         this.remoteDevice = null;
-        trial = 0;
+        this.trial = 1;
     }
 
     public void connectAsync() {
@@ -42,7 +42,7 @@ public class MetaWearConnectionEstablisher {
                 Context.BLUETOOTH_SERVICE
         );
         remoteDevice = btManager.getAdapter().getRemoteDevice(deviceMacAddress);
-        trial = 0;
+        this.trial = 1;
         doConnectAsync();
     }
 
@@ -59,7 +59,7 @@ public class MetaWearConnectionEstablisher {
     }
 
     private void onConnectionFailed() {
-        Log.i("MetaWearConnectionEstablisher", "Failed to connect. Trial=" + trial);
+        Log.i("MetaWearConnectionEstablisher", "Failed to connect. Trial: " + trial + "/" + MAX_TRIALS);
         trial++;
         if (trial >= MAX_TRIALS) {
             connectionEventListener.onConnectionFailed();
@@ -68,7 +68,7 @@ public class MetaWearConnectionEstablisher {
     }
 
     private void onConnectionSuccessful() {
-        Log.i("MetaWearConnectionEstablisher", "Connected. Trial=" + trial);
+        Log.i("MetaWearConnectionEstablisher", "Connected. Trial: " + trial);
         connectionEventListener.onConnectionSuccessful(board);
     }
 }
