@@ -2,6 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="pl.ppiwd.exerciseanalyst">
 
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -10,11 +17,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ExerciseAnalyst"
         android:usesCleartextTraffic="true">
-        <activity android:name=".activities.SignUpActivity"></activity>
+        <activity
+            android:name=".activities.WebViewStats"
+            android:label="@string/title_activity_web_view_stats"
+            android:theme="@style/Theme.ExerciseAnalyst.NoActionBar"></activity>
+        <activity android:name=".activities.SignUpActivity" />
         <activity android:name=".activities.SignInActivity" />
         <activity android:name=".activities.InitialActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -30,12 +42,5 @@
             android:foregroundServiceType="location" />
         <service android:name="com.mbientlab.metawear.android.BtleService" />
     </application>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
 </manifest>

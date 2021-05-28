@@ -38,9 +38,10 @@
         android:id="@+id/btn_start_meta_motion"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
         android:text="@string/start_meta_motion_service"
-        app:layout_constraintBottom_toTopOf="@id/btn_stop_meta_motion"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/et_device_mac_address" />
 
@@ -48,20 +49,33 @@
         android:id="@+id/btn_stop_meta_motion"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="64dp"
         android:text="@string/stop_meta_motion_service"
-        app:layout_constraintBottom_toTopOf="@id/btn_wipe_db"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btn_start_meta_motion" />
+        app:layout_constraintTop_toBottomOf="@+id/btn_start_meta_motion" />
 
     <Button
         android:id="@+id/btn_wipe_db"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="64dp"
         android:text="@string/wipe_db"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_stop_meta_motion" />
+
+    <Button
+        android:id="@+id/btn_open_webview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/open_wbv"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btn_stop_meta_motion" />
+        app:layout_constraintTop_toBottomOf="@+id/btn_wipe_db"
+        app:layout_constraintVertical_bias="0.483" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
