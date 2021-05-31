@@ -46,6 +46,7 @@ public class ServerConnection {
     }
 
     public void sendMeasurements(Context context) {
+        Log.i("ServerConnection", "Sending data to the server");
         if (currentRequest == null || currentRequest.isDone()) {
             CompletableFuture dbQuery = new MeasurementSelectCommand(measurementsDao).execute();
             sendRequest(dbQuery, context);
