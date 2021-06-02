@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ExerciseAnalyst</string>
     <string name="access_token_shared_preferences">access_token_shared_preferences</string>
     <string name="notification_info">Exercise Analyst is running</string>
     <string name="stop_meta_motion_service">Stop meta motion service</string>
-    <string name="start_meta_motion_service">Start meta motion service</string>
+    <string name="start_meta_motion_service">Start collecting training data</string>
     <string name="wipe_db">Wipe DB - use with caution</string>
     <string name="open_wbv">View stats</string>
     <string name="device_mac_address_hint">AB:CD:EF:GH:IJ:01</string>

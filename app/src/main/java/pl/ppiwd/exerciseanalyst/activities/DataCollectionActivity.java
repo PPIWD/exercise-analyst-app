@@ -297,8 +297,7 @@ public class DataCollectionActivity extends AppCompatActivity {
         }
         Intent switchAccountIntent = new Intent(this, InitialActivity.class);
         switchAccountIntent.putExtra(Constants.SHOULD_WIPE_ACCESS_TOKEN_KEY, true);
-        switchAccountIntent.setFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        switchAccountIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(switchAccountIntent);
         finish();
     }
