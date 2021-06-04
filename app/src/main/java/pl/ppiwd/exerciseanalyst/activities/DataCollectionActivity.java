@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -231,7 +232,19 @@ public class DataCollectionActivity extends AppCompatActivity {
         Intent serviceIntent = new Intent(this, MetaMotionService.class);
         unbindMetaMotionService();
         stopService(serviceIntent);
-        serverConnection.sendMeasurements(getApplicationContext());
+
+        DialogInterface.OnClickListener dialogClickListener = (dialog, clickedButton) -> {
+            switch (clickedButton){
+                case DialogInterface.BUTTON_POSITIVE:
+                    serverConnection.sendMeasurements(getApplicationContext());
+                    break;
+                case DialogInterface.BUTTON_NEGATIVE:
+                    break;
+            }
+        };
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Session stopped. Send gathered data to the server?").setPositiveButton("Yes", dialogClickListener)
+                .setNegativeButton("No", dialogClickListener).show();
     }
 
     private void startSessionTaggingActivity() {
