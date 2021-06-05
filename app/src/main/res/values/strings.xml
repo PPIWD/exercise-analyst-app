@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ExerciseAnalyst</string>
+    <string name="app_name">MetaWear Exercise Analyst</string>
     <string name="access_token_shared_preferences">access_token_shared_preferences</string>
     <string name="notification_info">Exercise Analyst is running</string>
     <string name="train">Train</string>
@@ -9,9 +9,11 @@
     <string name="start_training">Start training</string>
     <string name="loading_training">Connecting to device…</string>
     <string name="finish_training">Finish training</string>
-    <string name="open_wbv">View stats</string>
     <string name="device_mac_address_hint">AB:CD:EF:GH:IJ:01</string>
-    <string name="device_mac_address">MetaMotion device MAC address</string>
+    <string name="stop_meta_motion_service">Stop exercise session</string>
+    <string name="start_meta_motion_service">Start exercise session</string>
+    <string name="open_wbv">Your sessions</string>
+    <string name="device_mac_address">Bluetooth disabled</string>
     <string name="permissions_dialog_rationale">Location permissions is required for BLE feature</string>
     <string name="permissions_dialog_allow">Allow</string>
     <string name="permissions_dialog_deny">Deny</string>
@@ -36,6 +38,11 @@
     <string name="gender">Gender</string>
     <string name="previous_arrow"><![CDATA[<]]></string>
     <string name="switch_account">Switch account</string>
+    <string name="wipe_local_db">Clear measurement cache</string>
+    <string name="current_session_title">Current tagging session</string>
+    <string name="wearable_start_title">Wearable disconnected</string>
+    <string name="initial_name_wearable">MetaWear</string>
+    <string name="initial_mac_wearable">F7:D5:EE:12:84:4E</string>
 
     <string-array name="gender_items">
         <item>Male</item>

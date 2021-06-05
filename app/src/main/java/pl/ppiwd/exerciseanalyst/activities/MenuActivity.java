@@ -24,7 +24,6 @@ import pl.ppiwd.exerciseanalyst.utils.WipeDatabase;
 
 public class MenuActivity extends AppCompatActivity {
 
-    private EditText deviceMacAddressTextView;
     private Button gatherDataButton;
     private Button wipeDbButton;
     private Button openWebViewButton;
@@ -50,22 +49,16 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        deviceMacAddressTextView = findViewById(R.id.et_device_mac_address);
         gatherDataButton = findViewById(R.id.btn_start_meta_motion);
-        wipeDbButton = findViewById(R.id.btn_wipe_db);
         openWebViewButton = findViewById(R.id.btn_open_webview);
         startTrainingButton = findViewById(R.id.btn_start_training);
-
-        fillDeviceMacAddressEditTextFromSharedPrefs();
-
         startTrainingButton.setOnClickListener(view -> openTrainingView(Constants.TRAINING_REGULAR));
         gatherDataButton.setOnClickListener(view -> openTrainingView(Constants.TRAINING_DATA_GATHERING));
-        wipeDbButton.setOnClickListener(view -> WipeDatabase.wipe(this, Constants.ROOM_DB_NAME));
         openWebViewButton.setOnClickListener(view -> openWebViewStats());
     }
 
     private void openTrainingView(String serviceUrl) {
-        String deviceMacAddress = deviceMacAddressTextView.getText().toString().toUpperCase();
+        String deviceMacAddress = "";
         if (deviceMacAddress.isEmpty()) {
             Toast.makeText(this, "Provide device mac address", Toast.LENGTH_LONG).show();
             return;
@@ -84,12 +77,6 @@ public class MenuActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(Constants.DEVICE_MAC_ADDRESS_SHARED_PREFS_KEY, deviceMacAddress);
         editor.apply();
-    }
-
-    private void fillDeviceMacAddressEditTextFromSharedPrefs() {
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        String macAddress = sharedPref.getString(Constants.DEVICE_MAC_ADDRESS_SHARED_PREFS_KEY, "");
-        deviceMacAddressTextView.setText(macAddress);
     }
 
     private void openWebViewStats() {
