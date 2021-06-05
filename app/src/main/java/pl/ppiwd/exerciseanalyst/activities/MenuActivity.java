@@ -1,12 +1,9 @@
 package pl.ppiwd.exerciseanalyst.activities;
 
-import android.Manifest;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -14,22 +11,20 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import pl.ppiwd.exerciseanalyst.R;
 import pl.ppiwd.exerciseanalyst.activities.utils.BluetoothDeviceScanner;
 import pl.ppiwd.exerciseanalyst.common.BroadcastMsgs;
 import pl.ppiwd.exerciseanalyst.common.Constants;
-import pl.ppiwd.exerciseanalyst.utils.WipeDatabase;
 
 public class MenuActivity extends AppCompatActivity {
 
@@ -37,14 +32,23 @@ public class MenuActivity extends AppCompatActivity {
     private Button openWebViewButton;
     private boolean isDebugActive;
     private Button startTrainingButton;
-    private CardView cardViewSessionDetails;
     private CardView cardViewDeviceDetails;
-    private TextView deviceName;
-    private TextView deviceMacUi;
+    private TextView deviceNameTextView;
+    private TextView deviceMacTextView;
     private TextView deviceStatus;
     private ProgressBar pbDeviceScan;
     private BluetoothDeviceScanner blHandler;
-    private String deviceMac;
+    private String deviceMac = "";
+    private ActivityResultLauncher<Intent> btServiceLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    Log.i("MenuActivity", "User enabled the bluetooth service");
+                    startBtScanner();
+                } else {
+                    Log.e("MenuActivity", "User didn't enable the bluetooth service");
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,46 +71,25 @@ public class MenuActivity extends AppCompatActivity {
         gatherDataButton = findViewById(R.id.btn_start_meta_motion);
         openWebViewButton = findViewById(R.id.btn_open_webview);
         startTrainingButton = findViewById(R.id.btn_start_training);
-        deviceName = findViewById(R.id.tv_device_name);
-        deviceMacUi = findViewById(R.id.tv_mac_address);
+        deviceNameTextView = findViewById(R.id.tv_device_name);
+        deviceMacTextView = findViewById(R.id.tv_mac_address);
         deviceStatus = findViewById(R.id.tv_device_status);
         cardViewDeviceDetails = findViewById(R.id.cv_device_status);
-        cardViewSessionDetails = findViewById(R.id.cv_tagging_session);
         pbDeviceScan = findViewById(R.id.pb_scan_mode);
 
         startTrainingButton.setOnClickListener(view -> openTrainingView(Constants.TRAINING_REGULAR));
         gatherDataButton.setOnClickListener(view -> openTrainingView(Constants.TRAINING_DATA_GATHERING));
         openWebViewButton.setOnClickListener(view -> openWebViewStats());
 
-
-        cardViewSessionDetails.setVisibility(View.GONE);
-        cardViewDeviceDetails.setOnClickListener(view -> initiateBlScanning());
-        deviceMacUi.setVisibility(View.GONE);
-        deviceName.setVisibility(View.GONE);
-        pbDeviceScan.setVisibility(View.GONE);
-        deviceStatus.setText("Tap to scan for device");
+        cardViewDeviceDetails.setOnClickListener(view -> handleDeviceCardClick());
+        invalidateDeviceStats();
     }
 
     private void openTrainingView(String serviceUrl) {
-        String deviceMacAddress = "";
-        if (deviceMacAddress.isEmpty()) {
-            Toast.makeText(this, "Provide device mac address", Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        storeDeviceMacAddressToSharedPrefs(deviceMacAddress);
-
         Intent trainingActivity = new Intent(this, TrainingDataActivity.class);
-        trainingActivity.putExtra(Constants.DEVICE_MAC_ADDRESS_SHARED_PREFS_KEY, deviceMacAddress);
+        trainingActivity.putExtra(Constants.DEVICE_MAC_ADDRESS_SHARED_PREFS_KEY, this.deviceMac);
         trainingActivity.putExtra(Constants.TRAINING_TYPE, serviceUrl);
         startActivity(trainingActivity);
-    }
-
-    private void storeDeviceMacAddressToSharedPrefs(String deviceMacAddress) {
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(Constants.DEVICE_MAC_ADDRESS_SHARED_PREFS_KEY, deviceMacAddress);
-        editor.apply();
     }
 
     private void openWebViewStats() {
@@ -151,34 +134,56 @@ public class MenuActivity extends AppCompatActivity {
         finish();
     }
 
-    private void initiateBlScanning() {
-        Log.i("MenuActivity", "initiateBlScanning()");
-        deviceStatus.setText("Scanning for devices");
+    private void handleDeviceCardClick() {
+        if(blHandler != null) {
+            blHandler.close();
+            invalidateDeviceStats();
+            blHandler = null;
+        } else {
+            initializeBtService();
+        }
+    }
+
+    private void startBtScanner() {
+        deviceStatus.setText("Scanning, tap to cancel");
         pbDeviceScan.setVisibility(View.VISIBLE);
-        int hasLocationPermission = ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_COARSE_LOCATION);
-
-        if (hasLocationPermission != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
-        }
-
-        if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, 2);
-        }
 
         blHandler = new BluetoothDeviceScanner(this, (deviceMac) -> {
-           this.deviceMac = deviceMac;
-           showDeviceStats("MetaWear", deviceMac);
+            if(deviceMac != null) {
+                Log.i("BluetoothDeviceScanner", deviceMac);
+                this.deviceMac = deviceMac;
+                showDeviceStats("MetaWear", deviceMac);
+            } else {
+                // We timed out while waiting for nearby devices.
+                invalidateDeviceStats();
+            }
         });
+    }
+
+    private void initializeBtService() {
+        Log.i("MenuActivity", "initializeBtService");
+        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        btServiceLauncher.launch(enableBtIntent);
     }
 
     private void showDeviceStats(String name, String mac) {
         this.deviceStatus.setText("Wearable available");
-        this.deviceName.setText(name);
-        this.deviceName.setVisibility(View.VISIBLE);
-        this.deviceMacUi.setText(mac);
-        this.deviceName.setVisibility(View.VISIBLE);
+        pbDeviceScan.setVisibility(View.GONE);
+        this.deviceNameTextView.setText(name);
+        this.deviceNameTextView.setVisibility(View.VISIBLE);
+        this.deviceMacTextView.setText(mac);
+        this.deviceMacTextView.setVisibility(View.VISIBLE);
+        startTrainingButton.setEnabled(true);
+        gatherDataButton.setEnabled(true);
+    }
+
+    private void invalidateDeviceStats() {
+        Log.i("MenuActivity", "invalidateDeviceStats");
+        deviceMacTextView.setVisibility(View.GONE);
+        deviceNameTextView.setVisibility(View.GONE);
+        pbDeviceScan.setVisibility(View.GONE);
+        startTrainingButton.setEnabled(false);
+        gatherDataButton.setEnabled(false);
+        deviceStatus.setText("Tap to scan for devices");
     }
 }
