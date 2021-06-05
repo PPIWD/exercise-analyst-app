@@ -78,8 +78,4 @@ public class ServerConnection {
     private void showToast(String s, int lengthLong) {
         new MainUiHandler().postOnUI(() -> Toast.makeText(context, s, lengthLong).show());
     }
-
-    public void sendDataToRecognize(String recognizeDataUrl) {
-
-    }
 }

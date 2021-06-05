@@ -5,12 +5,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.NumberPicker;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -31,6 +33,7 @@ import pl.ppiwd.exerciseanalyst.common.Constants;
 import pl.ppiwd.exerciseanalyst.common.session.DeviceConnectionChecker;
 import pl.ppiwd.exerciseanalyst.persistence.MeasurementsDatabase;
 import pl.ppiwd.exerciseanalyst.persistence.dao.MeasurementsDao;
+import pl.ppiwd.exerciseanalyst.services.Timer;
 import pl.ppiwd.exerciseanalyst.services.metamotion.MetaMotionService;
 
 @RuntimePermissions
@@ -38,6 +41,9 @@ public class TrainingDataActivity extends AppCompatActivity {
     private Spinner activitySpinner;
     private NumberPicker repetitionsPicker;
     private Button startStopButton;
+    private Timer timer;
+    private Handler timerHandler;
+    private TextView timerTextView;
 
     private DeviceConnectionChecker deviceConnectionChecker;
     private MetaMotionServiceConnection metaMotionServiceConnection;
@@ -52,17 +58,21 @@ public class TrainingDataActivity extends AppCompatActivity {
     private Intent deviceService;
 
     private void initialize() {
-        Intent intent = getIntent();
+        this.timerHandler = new Handler();
+        this.timerTextView = findViewById(R.id.timerTextView);
+        this.timer = new Timer(timerTextView, timerHandler);
         this.startStopButton = findViewById(R.id.startSessionButton);
         this.activitySpinner = getSpinner();
         this.repetitionsPicker = getPicker();
         this.startStopButton.setOnClickListener(view -> handleSession());
 
-        if (intent.getStringExtra(Constants.TRAINING_TYPE).equals(Constants.TRAINING_REGULAR)) {
+        if (getIntent().getStringExtra(Constants.TRAINING_TYPE).equals(Constants.TRAINING_REGULAR)) {
             findViewById(R.id.activityTextView).setVisibility(View.INVISIBLE);
             findViewById(R.id.repetitionsTextView).setVisibility(View.INVISIBLE);
             activitySpinner.setVisibility(View.INVISIBLE);
             repetitionsPicker.setVisibility(View.INVISIBLE);
+        } else {
+            findViewById(R.id.backgroundImage).setVisibility(View.INVISIBLE);
         }
 
         this.deviceService = new Intent(this, MetaMotionService.class);
@@ -122,7 +132,6 @@ public class TrainingDataActivity extends AppCompatActivity {
         }
     }
 
-
     private NumberPicker getPicker() {
         NumberPicker picker = (NumberPicker) findViewById(R.id.repetitionsPicker);
         picker.setMinValue(1);
@@ -132,11 +141,15 @@ public class TrainingDataActivity extends AppCompatActivity {
     }
 
     private void handleSession() {
+        timer.reset();
+        timerHandler.post(timer);
         startMetaMotionService();
         startStopButton.setText(R.string.finish_training);
         activitySpinner.setEnabled(false);
         repetitionsPicker.setEnabled(false);
         startStopButton.setOnClickListener(v -> {
+            timerHandler.removeCallbacks(timer);
+
             finishSession();
             sendDataToServer();
         });
@@ -190,7 +203,12 @@ public class TrainingDataActivity extends AppCompatActivity {
                 if (trainingType.equals(Constants.TRAINING_DATA_GATHERING)) {
                     serverConnection.sendModelTrainingData(BuildConfig.GATHER_DATA_URL);
                 } else if (trainingType.equals(Constants.TRAINING_REGULAR)) {
-                    serverConnection.sendDataToRecognize(BuildConfig.RECOGNIZE_DATA_URL);
+                    //todo
+                    // This is the method which sends data to url which should recognize activity.
+                    // Sent data shouldn't contain info about repetitions and activity.
+                    // Currently it does and it should be changed.
+                    // (Possibly server will simply not read additional fields and it might work fine)
+                    serverConnection.sendModelTrainingData(BuildConfig.RECOGNIZE_DATA_URL);
                 }
             }
         };
