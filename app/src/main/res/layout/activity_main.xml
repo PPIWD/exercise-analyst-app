@@ -13,10 +13,12 @@
         android:text="@string/gather_data"
         android:textSize="20sp"
         android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_stop_meta_motion"
         app:strokeColor="#F4FF81"
         app:strokeWidth="2dp"
-        tools:layout_editor_absoluteX="40dp"
-        tools:layout_editor_absoluteY="463dp"
         tools:visibility="visible" />
 
     <Button
@@ -25,16 +27,20 @@
         android:layout_height="100dp"
         android:text="@string/open_wbv"
         android:textSize="20sp"
-        tools:layout_editor_absoluteX="251dp"
-        tools:layout_editor_absoluteY="600dp" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/btn_start_training"
+        app:layout_constraintTop_toTopOf="@+id/guideline4" />
 
     <Button
         android:id="@+id/btn_stop_meta_motion"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/stop_meta_motion_service"
-        tools:layout_editor_absoluteX="95dp"
-        tools:layout_editor_absoluteY="528dp" />
+        app:layout_constraintBottom_toTopOf="@+id/btn_start_meta_motion"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_start_training" />
 
     <Button
         android:id="@+id/btn_start_training"
@@ -42,8 +48,10 @@
         android:layout_height="100dp"
         android:text="@string/start_training"
         android:textSize="20sp"
-        tools:layout_editor_absoluteX="16dp"
-        tools:layout_editor_absoluteY="600dp"
+        app:layout_constraintEnd_toStartOf="@+id/btn_open_webview"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline4"
         tools:text="@string/start_training" />
 
     <androidx.constraintlayout.widget.Guideline
@@ -58,7 +66,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.6" />
+        app:layout_constraintGuide_percent="0.65" />
 
     <androidx.cardview.widget.CardView
         android:layout_width="309dp"
