@@ -5,12 +5,12 @@
     android:id="@+id/constraintLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activities.SessionTaggingActivity"
+    tools:context=".activities.TrainingDataActivity"
     tools:deviceIds="wear">
 
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/activityTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="99dp"
@@ -25,7 +25,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/repetitionsTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="252dp"
@@ -42,18 +42,19 @@
         android:layout_width="300dp"
         android:layout_height="50dp"
         android:layout_marginTop="15dp"
+        android:textSize="20sp"
         android:background="@color/cardview_shadow_start_color"
-        android:spinnerMode="dropdown"
+        android:spinnerMode="dialog"
         android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView2" />
+        app:layout_constraintTop_toBottomOf="@+id/activityTextView" />
 
     <Button
         android:id="@+id/startSessionButton"
-        android:layout_width="283dp"
-        android:layout_height="54dp"
+        android:layout_width="347dp"
+        android:layout_height="60dp"
         android:layout_marginTop="480dp"
         android:text="Start training"
         android:textSize="20sp"
@@ -68,6 +69,6 @@
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView3" />
+        app:layout_constraintTop_toBottomOf="@+id/repetitionsTextView" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

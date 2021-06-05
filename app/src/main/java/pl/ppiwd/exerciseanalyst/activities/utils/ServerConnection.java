@@ -4,60 +4,35 @@ import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.NetworkResponse;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.TimeoutError;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
-import com.google.gson.Gson;
-
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.functions.Action;
-import io.reactivex.rxjava3.functions.Function;
-import pl.ppiwd.exerciseanalyst.BuildConfig;
-import pl.ppiwd.exerciseanalyst.common.Constants;
 import pl.ppiwd.exerciseanalyst.common.auth.TokenStore;
 import pl.ppiwd.exerciseanalyst.persistence.MeasurementSelectCommand;
 import pl.ppiwd.exerciseanalyst.persistence.dao.MeasurementsDao;
 import pl.ppiwd.exerciseanalyst.persistence.entities.SessionWithMeasurements;
-import pl.ppiwd.exerciseanalyst.utils.Command;
-import pl.ppiwd.exerciseanalyst.utils.OnOperationResult;
+import pl.ppiwd.exerciseanalyst.services.utils.MainUiHandler;
+import pl.ppiwd.exerciseanalyst.utils.OperationResult;
+import pl.ppiwd.exerciseanalyst.utils.RequestOperationResult;
 import pl.ppiwd.exerciseanalyst.utils.VolleyJsonBodyRequest;
 
 public class ServerConnection {
-    private MeasurementsDao measurementsDao;
+    private final Context context;
+    private final MeasurementsDao measurementsDao;
     private CompletableFuture currentRequest;
-    private OnOperationResult onOperationResult;
 
-    public ServerConnection(MeasurementsDao dao, OnOperationResult onOperationResult) {
+    public ServerConnection(MeasurementsDao dao, Context context) {
         this.measurementsDao = dao;
         this.currentRequest = null;
-        this.onOperationResult = onOperationResult;
+        this.context = context;
     }
 
-    public void sendMeasurements(Context context) {
+    public void sendModelTrainingData(String url) {
         Log.i("ServerConnection", "Sending data to the server");
         if (currentRequest == null || currentRequest.isDone()) {
             CompletableFuture dbQuery = new MeasurementSelectCommand(measurementsDao).execute();
-            sendRequest(dbQuery, context);
+            sendRequest(dbQuery, context, url);
         } else {
-            /**
-             * TODO:
-             * There's no particular reason behind not being able to query
-             * multiple requests. With the current context it's a bit pointless,
-             * as you're going to be sending the same data over and over
-             * (MeasurementSelectCommand always queries the last row).
-             */
             Log.e("ServerConnection", "Request is already in progress.");
         }
     }
@@ -68,7 +43,7 @@ public class ServerConnection {
         }
     }
 
-    private void sendRequest(CompletableFuture callbackChain, Context context) {
+    private void sendRequest(CompletableFuture callbackChain, Context context, String url) {
         this.currentRequest = callbackChain.thenApply(param -> {
             Log.i("ServerConnection", "Querying local data.");
             SessionWithMeasurements measurements = ((Single<SessionWithMeasurements>) param).blockingGet();
@@ -78,8 +53,8 @@ public class ServerConnection {
 
             VolleyJsonBodyRequest.Builder builder = new VolleyJsonBodyRequest.Builder(context);
             VolleyJsonBodyRequest req = builder
-                    .setUrl(BuildConfig.SERVER_URL)
-                    .setOnOperationResult(onOperationResult)
+                    .setUrl(url)
+                    .setOnOperationResult(this::logUploadStatus)
                     .setJsonBody(json)
                     .withSecurityToken(TokenStore.getInstance().getAccessToken())
                     .build();
@@ -88,5 +63,23 @@ public class ServerConnection {
 
             return null;
         });
+    }
+
+    private void logUploadStatus(OperationResult operationResult) {
+        RequestOperationResult result = (RequestOperationResult) operationResult;
+        if(result.isSuccessful()) {
+            showToast("Data synced with remote.", Toast.LENGTH_SHORT);
+        }
+        else {
+            showToast("Could not sync with remote. Try again.", Toast.LENGTH_LONG);
+        }
+    }
+
+    private void showToast(String s, int lengthLong) {
+        new MainUiHandler().postOnUI(() -> Toast.makeText(context, s, lengthLong).show());
+    }
+
+    public void sendDataToRecognize(String recognizeDataUrl) {
+
     }
 }

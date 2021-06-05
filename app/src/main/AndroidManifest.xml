@@ -31,9 +31,10 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activities.SessionTaggingActivity"
-            android:label="@string/title_activity_session_tagging" />
-        <activity android:name=".activities.DataCollectionActivity" />
+            android:name=".activities.TrainingDataActivity"
+            android:label="@string/title_activity_session_tagging"
+            />
+        <activity android:name=".activities.MenuActivity" />
 
         <service
             android:name=".services.metamotion.MetaMotionService"

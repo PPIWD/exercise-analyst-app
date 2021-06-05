@@ -69,10 +69,9 @@ public class SignInActivity extends AppCompatActivity {
     }
 
     private void switchToDataCollectionActivity() {
-        Intent dataCollectionActivityIntent = new Intent(this, DataCollectionActivity.class);
-        dataCollectionActivityIntent.setFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(dataCollectionActivityIntent);
+        Intent menuActivity = new Intent(this, MenuActivity.class);
+        menuActivity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(menuActivity);
         finish();
     }
 }
