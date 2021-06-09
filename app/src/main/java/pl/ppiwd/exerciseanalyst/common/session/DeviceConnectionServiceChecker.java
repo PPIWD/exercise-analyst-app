@@ -12,15 +12,13 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import pl.ppiwd.exerciseanalyst.activities.utils.MetaMotionServiceConnection;
 import pl.ppiwd.exerciseanalyst.common.BroadcastMsgs;
 
-public class DeviceConnectionChecker {
+public class DeviceConnectionServiceChecker {
 
     private final LocalBroadcastManager broadcastManager;
     private boolean isDeviceConnected;
     private final BroadcastReceiver broadcastReceiver;
-    private MetaMotionServiceConnection metaMotionServiceConnection;
 
-    public DeviceConnectionChecker(AppCompatActivity activityClass, MetaMotionServiceConnection metaMotionServiceConnection) {
-        this.metaMotionServiceConnection = metaMotionServiceConnection;
+    public DeviceConnectionServiceChecker(AppCompatActivity activityClass) {
         this.broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -40,7 +38,7 @@ public class DeviceConnectionChecker {
         this.broadcastManager.registerReceiver(broadcastReceiver, getIntentFilter());
     }
 
-    public boolean isConnected() {
+    public boolean isServiceRunning() {
         isDeviceConnected = false;
         broadcastManager.sendBroadcastSync(new Intent(BroadcastMsgs.CHECK_METAMOTION_SERVICE_ALIVE));
         return isDeviceConnected;

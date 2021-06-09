@@ -33,6 +33,7 @@
         <activity
             android:name=".activities.TrainingDataActivity"
             android:label="@string/title_activity_session_tagging"
+            android:configChanges="keyboardHidden|orientation|screenSize"
             />
         <activity android:name=".activities.MenuActivity" />
 

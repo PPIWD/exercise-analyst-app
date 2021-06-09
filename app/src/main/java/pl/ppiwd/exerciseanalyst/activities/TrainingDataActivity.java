@@ -1,7 +1,6 @@
 package pl.ppiwd.exerciseanalyst.activities;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import androidx.core.content.ContextCompat;
 import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.OnNeverAskAgain;
 import permissions.dispatcher.OnPermissionDenied;
@@ -27,10 +27,9 @@ import permissions.dispatcher.PermissionRequest;
 import permissions.dispatcher.RuntimePermissions;
 import pl.ppiwd.exerciseanalyst.BuildConfig;
 import pl.ppiwd.exerciseanalyst.R;
-import pl.ppiwd.exerciseanalyst.activities.utils.MetaMotionServiceConnection;
 import pl.ppiwd.exerciseanalyst.activities.utils.ServerConnection;
 import pl.ppiwd.exerciseanalyst.common.Constants;
-import pl.ppiwd.exerciseanalyst.common.session.DeviceConnectionChecker;
+import pl.ppiwd.exerciseanalyst.common.session.DeviceConnectionServiceChecker;
 import pl.ppiwd.exerciseanalyst.persistence.MeasurementsDatabase;
 import pl.ppiwd.exerciseanalyst.persistence.dao.MeasurementsDao;
 import pl.ppiwd.exerciseanalyst.services.Timer;
@@ -45,8 +44,7 @@ public class TrainingDataActivity extends AppCompatActivity {
     private Handler timerHandler;
     private TextView timerTextView;
 
-    private DeviceConnectionChecker deviceConnectionChecker;
-    private MetaMotionServiceConnection metaMotionServiceConnection;
+    private DeviceConnectionServiceChecker deviceConnectionServiceChecker;
     private ServerConnection serverConnection;
     private static final String[] activities = new String[]{
             "Walking",
@@ -77,7 +75,8 @@ public class TrainingDataActivity extends AppCompatActivity {
 
         this.deviceService = new Intent(this, MetaMotionService.class);
         this.serverConnection = getServerConnection();
-        this.deviceConnectionChecker = new DeviceConnectionChecker(this, metaMotionServiceConnection);
+        this.deviceConnectionServiceChecker = new DeviceConnectionServiceChecker(this);
+        configureButton(deviceConnectionServiceChecker.isServiceRunning());
     }
 
     private ServerConnection getServerConnection() {
@@ -88,7 +87,7 @@ public class TrainingDataActivity extends AppCompatActivity {
     private Spinner getSpinner() {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(TrainingDataActivity.this, android.R.layout.simple_spinner_item, activities);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        Spinner spinner = (Spinner) findViewById(R.id.activitySpinner);
+        Spinner spinner = findViewById(R.id.activitySpinner);
         spinner.setAdapter(adapter);
         return spinner;
     }
@@ -107,20 +106,16 @@ public class TrainingDataActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        if (deviceConnectionChecker.isConnected()) {
-            bindToMetaMotionService();
-        }
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        finishSession();
-        deviceConnectionChecker.unregister();
+    protected void onDestroy() {
+        super.onDestroy();
+        deviceConnectionServiceChecker.unregister();
         serverConnection.cancelRequest();
-        Toast.makeText(this, "Unfinished trainings dropped", Toast.LENGTH_SHORT).show();
+
+        //isFinishing() is true, when activity view is really being closed and not when e.g. screen is being rotated
+        if (isFinishing()) {
+            Toast.makeText(this, "Unfinished trainings dropped", Toast.LENGTH_SHORT).show();
+            stopService(deviceService);
+        }
     }
 
     @Override
@@ -133,7 +128,7 @@ public class TrainingDataActivity extends AppCompatActivity {
     }
 
     private NumberPicker getPicker() {
-        NumberPicker picker = (NumberPicker) findViewById(R.id.repetitionsPicker);
+        NumberPicker picker = findViewById(R.id.repetitionsPicker);
         picker.setMinValue(1);
         picker.setMaxValue(25);
         picker.setValue(5);
@@ -144,20 +139,31 @@ public class TrainingDataActivity extends AppCompatActivity {
         timer.reset();
         timerHandler.post(timer);
         startMetaMotionService();
-        startStopButton.setText(R.string.finish_training);
-        activitySpinner.setEnabled(false);
-        repetitionsPicker.setEnabled(false);
-        startStopButton.setOnClickListener(v -> {
-            timerHandler.removeCallbacks(timer);
+        configureButton(true);
+    }
 
-            finishSession();
-            sendDataToServer();
-        });
+    private void configureButton(boolean isTrainingActive) {
+        if (isTrainingActive) {
+            startStopButton.setOnClickListener(v -> {
+                timerHandler.removeCallbacks(timer);
+                stopService(deviceService);
+                sendDataToServer();
+                configureButton(false);
+            });
+            startStopButton.setText(R.string.finish_training);
+            activitySpinner.setEnabled(false);
+            repetitionsPicker.setEnabled(false);
+        } else {
+            startStopButton.setOnClickListener(view -> handleSession());
+            startStopButton.setText(R.string.start_training);
+            activitySpinner.setEnabled(true);
+            repetitionsPicker.setEnabled(true);
+        }
     }
 
     @NeedsPermission(Manifest.permission.ACCESS_FINE_LOCATION)
     public void startMetaMotionService() {
-        if (deviceConnectionChecker.isConnected()) {
+        if (deviceConnectionServiceChecker.isServiceRunning()) {
             Toast.makeText(this, "Service is already running", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -168,32 +174,7 @@ public class TrainingDataActivity extends AppCompatActivity {
         deviceService.putExtra(Constants.ACTIVITY_NAME_KEY, activitySpinner.getSelectedItem().toString());
         deviceService.putExtra(Constants.REPETITIONS_COUNT_KEY, repetitionsPicker.getValue());
 
-        startService(deviceService);
-        bindToMetaMotionService();
-    }
-
-    private void bindToMetaMotionService() {
-        Intent serviceIntent = new Intent(this, MetaMotionService.class);
-        metaMotionServiceConnection = new MetaMotionServiceConnection();
-        bindService(serviceIntent, metaMotionServiceConnection, Context.BIND_AUTO_CREATE);
-    }
-
-    private void finishSession() {
-        unbindMetaMotionService();
-        stopService(deviceService);
-
-        startStopButton.setOnClickListener(view -> handleSession());
-        startStopButton.setText(R.string.start_training);
-        activitySpinner.setEnabled(true);
-        repetitionsPicker.setEnabled(true);
-    }
-
-    private void unbindMetaMotionService() {
-        if (metaMotionServiceConnection != null) {
-            Log.i("DataCollectionActivity()", "unbindMetaMotionService() unbinding");
-            unbindService(metaMotionServiceConnection);
-            metaMotionServiceConnection = null;
-        }
+        ContextCompat.startForegroundService(this,deviceService);
     }
 
     private void sendDataToServer() {
@@ -213,7 +194,7 @@ public class TrainingDataActivity extends AppCompatActivity {
             }
         };
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Training finished. Do you want to save gathered data?")
+        builder.setMessage("Training finished. Do you want to save training data?")
                 .setPositiveButton("Yes", dialogClickListener)
                 .setNegativeButton("No", dialogClickListener)
                 .show();
@@ -233,7 +214,7 @@ public class TrainingDataActivity extends AppCompatActivity {
     }
 
     @OnNeverAskAgain(Manifest.permission.ACCESS_FINE_LOCATION)
-    public void onCameraNeverAskAgain() {
+    public void onBackgroundLocationNeverAskAgain() {
         Toast.makeText(
                 this,
                 "App will never ask again for background location permissions",
