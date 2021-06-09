@@ -1,5 +1,6 @@
 package pl.ppiwd.exerciseanalyst.activities;
 
+import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
@@ -18,14 +19,22 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
+import permissions.dispatcher.NeedsPermission;
+import permissions.dispatcher.OnNeverAskAgain;
+import permissions.dispatcher.OnPermissionDenied;
+import permissions.dispatcher.OnShowRationale;
+import permissions.dispatcher.PermissionRequest;
+import permissions.dispatcher.RuntimePermissions;
 import pl.ppiwd.exerciseanalyst.R;
 import pl.ppiwd.exerciseanalyst.activities.utils.BluetoothDeviceScanner;
 import pl.ppiwd.exerciseanalyst.common.BroadcastMsgs;
 import pl.ppiwd.exerciseanalyst.common.Constants;
 
+@RuntimePermissions
 public class MenuActivity extends AppCompatActivity {
 
     private Button gatherDataButton;
@@ -85,7 +94,8 @@ public class MenuActivity extends AppCompatActivity {
         invalidateDeviceStats();
     }
 
-    private void openTrainingView(String serviceUrl) {
+    @NeedsPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+    public void openTrainingView(String serviceUrl) {
         Intent trainingActivity = new Intent(this, TrainingDataActivity.class);
         trainingActivity.putExtra(Constants.DEVICE_MAC_ADDRESS_SHARED_PREFS_KEY, this.deviceMac);
         trainingActivity.putExtra(Constants.TRAINING_TYPE, serviceUrl);
@@ -185,5 +195,38 @@ public class MenuActivity extends AppCompatActivity {
         startTrainingButton.setEnabled(false);
         gatherDataButton.setEnabled(false);
         deviceStatus.setText("Tap to scan for devices");
+    }
+
+    //Permissions handling below...
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        // NOTE: delegate the permission handling to generated method
+        MenuActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
+    }
+
+    @OnPermissionDenied(Manifest.permission.ACCESS_FINE_LOCATION)
+    public void onBackgroundLocationDenied() {
+        Toast.makeText(this, "Background location denied", Toast.LENGTH_LONG).show();
+    }
+
+    @OnNeverAskAgain(Manifest.permission.ACCESS_FINE_LOCATION)
+    public void onBackgroundLocationNeverAskAgain() {
+        Toast.makeText(
+                this,
+                "App will never ask again for background location permissions",
+                Toast.LENGTH_SHORT
+        ).show();
+    }
+
+    @OnShowRationale(Manifest.permission.ACCESS_FINE_LOCATION)
+    public void showRationaleForBackgroundLocation(PermissionRequest request) {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder
+                .setPositiveButton(R.string.permissions_dialog_allow, (dialog, which) -> request.proceed())
+                .setNegativeButton(R.string.permissions_dialog_deny, (dialog, which) -> request.cancel())
+                .setCancelable(false)
+                .setMessage(R.string.permissions_dialog_rationale)
+                .show();
     }
 }

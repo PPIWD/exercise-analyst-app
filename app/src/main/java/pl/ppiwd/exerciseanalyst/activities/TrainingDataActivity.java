@@ -1,11 +1,9 @@
 package pl.ppiwd.exerciseanalyst.activities;
 
-import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -14,17 +12,10 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import androidx.core.content.ContextCompat;
-import permissions.dispatcher.NeedsPermission;
-import permissions.dispatcher.OnNeverAskAgain;
-import permissions.dispatcher.OnPermissionDenied;
-import permissions.dispatcher.OnShowRationale;
-import permissions.dispatcher.PermissionRequest;
-import permissions.dispatcher.RuntimePermissions;
 import pl.ppiwd.exerciseanalyst.BuildConfig;
 import pl.ppiwd.exerciseanalyst.R;
 import pl.ppiwd.exerciseanalyst.activities.utils.ServerConnection;
@@ -35,7 +26,6 @@ import pl.ppiwd.exerciseanalyst.persistence.dao.MeasurementsDao;
 import pl.ppiwd.exerciseanalyst.services.Timer;
 import pl.ppiwd.exerciseanalyst.services.metamotion.MetaMotionService;
 
-@RuntimePermissions
 public class TrainingDataActivity extends AppCompatActivity {
     private Spinner activitySpinner;
     private NumberPicker repetitionsPicker;
@@ -161,7 +151,6 @@ public class TrainingDataActivity extends AppCompatActivity {
         }
     }
 
-    @NeedsPermission(Manifest.permission.ACCESS_FINE_LOCATION)
     public void startMetaMotionService() {
         if (deviceConnectionServiceChecker.isServiceRunning()) {
             Toast.makeText(this, "Service is already running", Toast.LENGTH_SHORT).show();
@@ -197,39 +186,6 @@ public class TrainingDataActivity extends AppCompatActivity {
         builder.setMessage("Training finished. Do you want to save training data?")
                 .setPositiveButton("Yes", dialogClickListener)
                 .setNegativeButton("No", dialogClickListener)
-                .show();
-    }
-
-    //Permissions handling below...
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        // NOTE: delegate the permission handling to generated method
-        TrainingDataActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
-    }
-
-    @OnPermissionDenied(Manifest.permission.ACCESS_FINE_LOCATION)
-    public void onBackgroundLocationDenied() {
-        Toast.makeText(this, "Background location denied", Toast.LENGTH_LONG).show();
-    }
-
-    @OnNeverAskAgain(Manifest.permission.ACCESS_FINE_LOCATION)
-    public void onBackgroundLocationNeverAskAgain() {
-        Toast.makeText(
-                this,
-                "App will never ask again for background location permissions",
-                Toast.LENGTH_SHORT
-        ).show();
-    }
-
-    @OnShowRationale(Manifest.permission.ACCESS_FINE_LOCATION)
-    public void showRationaleForBackgroundLocation(PermissionRequest request) {
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-        dialogBuilder
-                .setPositiveButton(R.string.permissions_dialog_allow, (dialog, which) -> request.proceed())
-                .setNegativeButton(R.string.permissions_dialog_deny, (dialog, which) -> request.cancel())
-                .setCancelable(false)
-                .setMessage(R.string.permissions_dialog_rationale)
                 .show();
     }
 }
