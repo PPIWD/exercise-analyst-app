@@ -229,4 +229,17 @@ public class MenuActivity extends AppCompatActivity {
                 .setMessage(R.string.permissions_dialog_rationale)
                 .show();
     }
+
+    @Override
+    protected void onSaveInstanceState(final Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("mac", this.deviceMac);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(final Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        this.deviceMac = savedInstanceState.getString("mac");
+        showDeviceStats("MetaWear", this.deviceMac);
+    }
 }
