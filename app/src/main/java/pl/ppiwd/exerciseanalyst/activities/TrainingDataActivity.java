@@ -1,9 +1,13 @@
 package pl.ppiwd.exerciseanalyst.activities;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -16,9 +20,11 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import pl.ppiwd.exerciseanalyst.BuildConfig;
 import pl.ppiwd.exerciseanalyst.R;
 import pl.ppiwd.exerciseanalyst.activities.utils.ServerConnection;
+import pl.ppiwd.exerciseanalyst.common.BroadcastMsgs;
 import pl.ppiwd.exerciseanalyst.common.Constants;
 import pl.ppiwd.exerciseanalyst.common.session.DeviceConnectionServiceChecker;
 import pl.ppiwd.exerciseanalyst.persistence.MeasurementsDatabase;
@@ -44,6 +50,15 @@ public class TrainingDataActivity extends AppCompatActivity {
             "Push ups"
     };
     private Intent deviceService;
+    private BroadcastReceiver metaWearBroadcastSink = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String message = (String)(intent.getExtras().get(BroadcastMsgs.MSG_KEY));
+            if(message.equals(BroadcastMsgs.METAMOTION_SERIVCE_START)) {
+                timer.reset();
+                timerHandler.post(timer);
+            }
+        }
+    };
 
     private void initialize() {
         this.timerHandler = new Handler();
@@ -67,6 +82,9 @@ public class TrainingDataActivity extends AppCompatActivity {
         this.serverConnection = getServerConnection();
         this.deviceConnectionServiceChecker = new DeviceConnectionServiceChecker(this);
         configureButton(deviceConnectionServiceChecker.isServiceRunning());
+
+        IntentFilter filter = new IntentFilter(BroadcastMsgs.ACTIVITY_BROADCAST_INTENT_ACTION);
+        LocalBroadcastManager.getInstance(this).registerReceiver(metaWearBroadcastSink, filter);
     }
 
     private ServerConnection getServerConnection() {
@@ -126,8 +144,6 @@ public class TrainingDataActivity extends AppCompatActivity {
     }
 
     private void handleSession() {
-        timer.reset();
-        timerHandler.post(timer);
         startMetaMotionService();
         configureButton(true);
     }
@@ -163,7 +179,7 @@ public class TrainingDataActivity extends AppCompatActivity {
         deviceService.putExtra(Constants.ACTIVITY_NAME_KEY, activitySpinner.getSelectedItem().toString());
         deviceService.putExtra(Constants.REPETITIONS_COUNT_KEY, repetitionsPicker.getValue());
 
-        ContextCompat.startForegroundService(this,deviceService);
+        ContextCompat.startForegroundService(this, deviceService);
     }
 
     private void sendDataToServer() {
