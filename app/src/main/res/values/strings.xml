@@ -1,10 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ExerciseAnalyst</string>
     <string name="access_token_shared_preferences">access_token_shared_preferences</string>
     <string name="notification_info">Exercise Analyst is running</string>
-    <string name="stop_meta_motion_service">Stop meta motion service</string>
-    <string name="start_meta_motion_service">Start meta motion service</string>
-    <string name="wipe_db">Wipe DB - use with caution</string>
+    <string name="train">Train</string>
+    <string name="gather_data">Gather data (debug)</string>
+    <string name="wipe_db">Wipe local DB (debug)</string>
+    <string name="start_training">Start training</string>
+    <string name="loading_training">Connecting to device…</string>
+    <string name="finish_training">Finish training</string>
     <string name="open_wbv">View stats</string>
     <string name="device_mac_address_hint">AB:CD:EF:GH:IJ:01</string>
     <string name="device_mac_address">MetaMotion device MAC address</string>
@@ -46,5 +50,6 @@
 
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="debug_mode">Debug mode</string>
 
 </resources>

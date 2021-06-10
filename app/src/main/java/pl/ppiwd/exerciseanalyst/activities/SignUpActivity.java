@@ -172,7 +172,7 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     private void switchToDataCollectionActivity() {
-        Intent dataCollectionActivityIntent = new Intent(this, DataCollectionActivity.class);
+        Intent dataCollectionActivityIntent = new Intent(this, MenuActivity.class);
         dataCollectionActivityIntent.setFlags(
                 Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(dataCollectionActivityIntent);

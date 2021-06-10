@@ -24,7 +24,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.mbientlab.metawear.android.BtleService;
 
 import pl.ppiwd.exerciseanalyst.R;
-import pl.ppiwd.exerciseanalyst.activities.DataCollectionActivity;
+import pl.ppiwd.exerciseanalyst.activities.MenuActivity;
 import pl.ppiwd.exerciseanalyst.common.BroadcastMsgs;
 import pl.ppiwd.exerciseanalyst.common.Constants;
 import pl.ppiwd.exerciseanalyst.common.ServiceActivityMsgSender;
@@ -60,8 +60,7 @@ public class MetaMotionService extends Service implements FrontendControl {
         msgSender = new ServiceActivityMsgSender(localBroadcastManager);
         metaMotionServiceAliveCheckReceiver = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
-                localBroadcastManager.sendBroadcastSync(
-                        new Intent(BroadcastMsgs.METAMOTION_SERVICE_ALIVE_RESP));
+                localBroadcastManager.sendBroadcastSync(new Intent(BroadcastMsgs.METAMOTION_SERVICE_ALIVE_RESP));
             }
         };
         localBroadcastManager.registerReceiver(metaMotionServiceAliveCheckReceiver,
@@ -121,7 +120,7 @@ public class MetaMotionService extends Service implements FrontendControl {
     }
 
     private Notification buildNotification() {
-        Intent notificationIntent = new Intent(this, DataCollectionActivity.class);
+        Intent notificationIntent = new Intent(this, MenuActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, 0);
         Notification notification =
@@ -149,9 +148,9 @@ public class MetaMotionService extends Service implements FrontendControl {
         measurementsRepository.onDestroy();
         releasePartialWakeLock();
         localBroadcastManager.unregisterReceiver(metaMotionServiceAliveCheckReceiver);
-        if (btleServiceConnection.isServiceBound())
+        if (btleServiceConnection.isServiceBound()) {
             unbindService(btleServiceConnection);
-
+        }
         metaMotionCtrl.disconnectAsync();
         super.onDestroy();
     }

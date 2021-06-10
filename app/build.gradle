@@ -12,7 +12,8 @@ android {
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
-        buildConfigField "String", 'SERVER_URL', '"http://pawelkob-002-site3.itempurl.com/api/measurements-dev"'
+        buildConfigField "String", 'GATHER_DATA_URL', '"http://pawelkob-002-site3.itempurl.com/api/measurements-dev"'
+        buildConfigField "String", 'RECOGNIZE_DATA_URL', '"http://pawelkob-002-site3.itempurl.com/api/measurements"'
         buildConfigField "String", 'SIGN_IN_URL', '"http://pawelkob-002-site3.itempurl.com/api/Auth/login"'
         buildConfigField "String", 'SIGN_UP_URL', '"http://pawelkob-002-site3.itempurl.com/api/Auth/register"'
 

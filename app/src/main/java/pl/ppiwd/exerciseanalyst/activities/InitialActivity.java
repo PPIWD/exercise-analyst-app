@@ -47,7 +47,7 @@ public class InitialActivity extends AppCompatActivity {
     }
 
     private void switchToDataCollectionActivity() {
-        Intent dataCollectionActivityIntent = new Intent(this, DataCollectionActivity.class);
+        Intent dataCollectionActivityIntent = new Intent(this, MenuActivity.class);
         startActivity(dataCollectionActivityIntent);
         finish();
     }

@@ -4,4 +4,9 @@
     <item android:id="@+id/switch_account_data_col_act"
         android:title="@string/switch_account"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/debug_switch"
+        android:checkable="true"
+        android:title="@string/debug_mode"
+        android:visibility="visible"/>
 </menu>
