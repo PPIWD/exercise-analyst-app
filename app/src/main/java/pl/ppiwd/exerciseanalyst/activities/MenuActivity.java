@@ -197,6 +197,13 @@ public class MenuActivity extends AppCompatActivity {
         deviceStatus.setText("Tap to scan for devices");
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(blHandler != null)
+            blHandler.close();
+    }
+
     //Permissions handling below...
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

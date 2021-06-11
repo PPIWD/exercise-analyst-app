@@ -124,6 +124,8 @@ public class TrainingDataActivity extends AppCompatActivity {
             Toast.makeText(this, "Unfinished trainings dropped", Toast.LENGTH_SHORT).show();
             stopService(deviceService);
         }
+
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(metaWearBroadcastSink);
     }
 
     @Override
