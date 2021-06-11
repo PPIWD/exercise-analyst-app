@@ -53,7 +53,7 @@ public class MenuActivity extends AppCompatActivity {
             result -> {
                 if (result.getResultCode() == Activity.RESULT_OK) {
                     Log.i("MenuActivity", "User enabled the bluetooth service");
-                    startBtScanner();
+                    MenuActivityPermissionsDispatcher.startBtScannerWithPermissionCheck(this);
                 } else {
                     Log.e("MenuActivity", "User didn't enable the bluetooth service");
                 }
@@ -94,7 +94,6 @@ public class MenuActivity extends AppCompatActivity {
         invalidateDeviceStats();
     }
 
-    @NeedsPermission(Manifest.permission.ACCESS_FINE_LOCATION)
     public void openTrainingView(String serviceUrl) {
         Intent trainingActivity = new Intent(this, TrainingDataActivity.class);
         trainingActivity.putExtra(Constants.DEVICE_MAC_ADDRESS_SHARED_PREFS_KEY, this.deviceMac);
@@ -154,7 +153,8 @@ public class MenuActivity extends AppCompatActivity {
         }
     }
 
-    private void startBtScanner() {
+    @NeedsPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+    public void startBtScanner() {
         deviceStatus.setText("Scanning, tap to cancel");
         pbDeviceScan.setVisibility(View.VISIBLE);
 
