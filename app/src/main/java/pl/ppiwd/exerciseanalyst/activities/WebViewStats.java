@@ -13,6 +13,8 @@ import pl.ppiwd.exerciseanalyst.common.auth.TokenStore;
 
 public class WebViewStats extends AppCompatActivity {
 
+    private WebView wbvStats;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -22,7 +24,7 @@ public class WebViewStats extends AppCompatActivity {
     }
 
     private void initViews() {
-        WebView wbvStats = findViewById(R.id.wbv_stats);
+        wbvStats = findViewById(R.id.wbv_stats);
         setupWebView(wbvStats);
     }
 
@@ -41,5 +43,14 @@ public class WebViewStats extends AppCompatActivity {
             }
         });
         wbvStats.loadUrl("http://pawelkob-002-site10.itempurl.com/");
+    }
+
+    @Override
+    protected void onDestroy() {
+        if(isFinishing()) {
+            if(wbvStats != null)
+                wbvStats.clearCache(true);
+        }
+        super.onDestroy();
     }
 }
