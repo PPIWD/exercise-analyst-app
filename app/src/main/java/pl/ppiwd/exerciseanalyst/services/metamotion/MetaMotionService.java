@@ -174,6 +174,7 @@ public class MetaMotionService extends Service implements FrontendControl {
                 "Connected with MetaWear device. SessionId: " + sessionId,
                 Toast.LENGTH_SHORT
         ).show());
+        msgSender.send(BroadcastMsgs.METAMOTION_SERIVCE_START);
     }
 
     @Override

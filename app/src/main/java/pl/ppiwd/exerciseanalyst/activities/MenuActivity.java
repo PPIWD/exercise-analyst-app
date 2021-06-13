@@ -1,9 +1,10 @@
 package pl.ppiwd.exerciseanalyst.activities;
 
-import android.content.Context;
+import android.Manifest;
+import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -11,85 +12,93 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 
+import permissions.dispatcher.NeedsPermission;
+import permissions.dispatcher.OnNeverAskAgain;
+import permissions.dispatcher.OnPermissionDenied;
+import permissions.dispatcher.OnShowRationale;
+import permissions.dispatcher.PermissionRequest;
+import permissions.dispatcher.RuntimePermissions;
 import pl.ppiwd.exerciseanalyst.R;
+import pl.ppiwd.exerciseanalyst.activities.utils.BluetoothDeviceScanner;
 import pl.ppiwd.exerciseanalyst.common.BroadcastMsgs;
 import pl.ppiwd.exerciseanalyst.common.Constants;
-import pl.ppiwd.exerciseanalyst.utils.WipeDatabase;
 
+@RuntimePermissions
 public class MenuActivity extends AppCompatActivity {
 
-    private EditText deviceMacAddressTextView;
     private Button gatherDataButton;
-    private Button wipeDbButton;
     private Button openWebViewButton;
     private boolean isDebugActive;
     private Button startTrainingButton;
+    private CardView cardViewDeviceDetails;
+    private TextView deviceNameTextView;
+    private TextView deviceMacTextView;
+    private TextView deviceStatus;
+    private ProgressBar pbDeviceScan;
+    private BluetoothDeviceScanner blHandler;
+    private String deviceMac = "";
+    private ActivityResultLauncher<Intent> btServiceLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    Log.i("MenuActivity", "User enabled the bluetooth service");
+                    MenuActivityPermissionsDispatcher.startBtScannerWithPermissionCheck(this);
+                } else {
+                    Log.e("MenuActivity", "User didn't enable the bluetooth service");
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         this.isDebugActive = false;
         super.onCreate(savedInstanceState);
-        Log.i("DataCollectionActivity()", "onCreate()");
+        Log.i("MenuActivity", "onCreate()");
         setContentView(R.layout.activity_main);
         initViews();
         init();
     }
 
     private void init() {
-        Log.i("DataCollectionActivity", "init()");
+        Log.i("MenuActivity", "init()");
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BroadcastMsgs.METAMOTION_SERVICE_ALIVE_RESP);
         intentFilter.addAction(BroadcastMsgs.ACTIVITY_BROADCAST_INTENT_ACTION);
-
     }
 
     private void initViews() {
-        deviceMacAddressTextView = findViewById(R.id.et_device_mac_address);
         gatherDataButton = findViewById(R.id.btn_start_meta_motion);
-        wipeDbButton = findViewById(R.id.btn_wipe_db);
         openWebViewButton = findViewById(R.id.btn_open_webview);
         startTrainingButton = findViewById(R.id.btn_start_training);
-
-        fillDeviceMacAddressEditTextFromSharedPrefs();
+        deviceNameTextView = findViewById(R.id.tv_device_name);
+        deviceMacTextView = findViewById(R.id.tv_mac_address);
+        deviceStatus = findViewById(R.id.tv_device_status);
+        cardViewDeviceDetails = findViewById(R.id.cv_device_status);
+        pbDeviceScan = findViewById(R.id.pb_scan_mode);
 
         startTrainingButton.setOnClickListener(view -> openTrainingView(Constants.TRAINING_REGULAR));
         gatherDataButton.setOnClickListener(view -> openTrainingView(Constants.TRAINING_DATA_GATHERING));
-        wipeDbButton.setOnClickListener(view -> WipeDatabase.wipe(this, Constants.ROOM_DB_NAME));
         openWebViewButton.setOnClickListener(view -> openWebViewStats());
+
+        cardViewDeviceDetails.setOnClickListener(view -> handleDeviceCardClick());
+        invalidateDeviceStats();
     }
 
-    private void openTrainingView(String serviceUrl) {
-        String deviceMacAddress = deviceMacAddressTextView.getText().toString().toUpperCase();
-        if (deviceMacAddress.isEmpty()) {
-            Toast.makeText(this, "Provide device mac address", Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        storeDeviceMacAddressToSharedPrefs(deviceMacAddress);
-
+    public void openTrainingView(String serviceUrl) {
         Intent trainingActivity = new Intent(this, TrainingDataActivity.class);
-        trainingActivity.putExtra(Constants.DEVICE_MAC_ADDRESS_SHARED_PREFS_KEY, deviceMacAddress);
+        trainingActivity.putExtra(Constants.DEVICE_MAC_ADDRESS_SHARED_PREFS_KEY, this.deviceMac);
         trainingActivity.putExtra(Constants.TRAINING_TYPE, serviceUrl);
         startActivity(trainingActivity);
-    }
-
-    private void storeDeviceMacAddressToSharedPrefs(String deviceMacAddress) {
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(Constants.DEVICE_MAC_ADDRESS_SHARED_PREFS_KEY, deviceMacAddress);
-        editor.apply();
-    }
-
-    private void fillDeviceMacAddressEditTextFromSharedPrefs() {
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        String macAddress = sharedPref.getString(Constants.DEVICE_MAC_ADDRESS_SHARED_PREFS_KEY, "");
-        deviceMacAddressTextView.setText(macAddress);
     }
 
     private void openWebViewStats() {
@@ -115,11 +124,9 @@ public class MenuActivity extends AppCompatActivity {
             isDebugActive = !isDebugActive;
             item.setChecked(isDebugActive);
             if (isDebugActive) {
-                wipeDbButton.setVisibility(View.VISIBLE);
                 gatherDataButton.setVisibility(View.VISIBLE);
                 Toast.makeText(this, "Debug mode: enabled", Toast.LENGTH_LONG).show();
             } else {
-                wipeDbButton.setVisibility(View.GONE);
                 gatherDataButton.setVisibility(View.GONE);
                 Toast.makeText(this, "Debug mode: disabled", Toast.LENGTH_LONG).show();
             }
@@ -136,4 +143,110 @@ public class MenuActivity extends AppCompatActivity {
         finish();
     }
 
+    private void handleDeviceCardClick() {
+        if(blHandler != null) {
+            blHandler.close();
+            invalidateDeviceStats();
+            blHandler = null;
+        } else {
+            initializeBtService();
+        }
+    }
+
+    @NeedsPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+    public void startBtScanner() {
+        deviceStatus.setText("Scanning, tap to cancel");
+        pbDeviceScan.setVisibility(View.VISIBLE);
+
+        blHandler = new BluetoothDeviceScanner(this, (deviceMac) -> {
+            if(deviceMac != null) {
+                Log.i("BluetoothDeviceScanner", deviceMac);
+                this.deviceMac = deviceMac;
+                showDeviceStats("MetaWear", deviceMac);
+            } else {
+                // We timed out while waiting for nearby devices.
+                invalidateDeviceStats();
+            }
+        });
+    }
+
+    private void initializeBtService() {
+        Log.i("MenuActivity", "initializeBtService");
+        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        btServiceLauncher.launch(enableBtIntent);
+    }
+
+    private void showDeviceStats(String name, String mac) {
+        this.deviceStatus.setText("Wearable available");
+        pbDeviceScan.setVisibility(View.GONE);
+        this.deviceNameTextView.setText(name);
+        this.deviceNameTextView.setVisibility(View.VISIBLE);
+        this.deviceMacTextView.setText(mac);
+        this.deviceMacTextView.setVisibility(View.VISIBLE);
+        startTrainingButton.setEnabled(true);
+        gatherDataButton.setEnabled(true);
+    }
+
+    private void invalidateDeviceStats() {
+        Log.i("MenuActivity", "invalidateDeviceStats");
+        deviceMacTextView.setVisibility(View.GONE);
+        deviceNameTextView.setVisibility(View.GONE);
+        pbDeviceScan.setVisibility(View.GONE);
+        startTrainingButton.setEnabled(false);
+        gatherDataButton.setEnabled(false);
+        deviceStatus.setText("Tap to scan for devices");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(blHandler != null)
+            blHandler.close();
+    }
+
+    //Permissions handling below...
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        // NOTE: delegate the permission handling to generated method
+        MenuActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
+    }
+
+    @OnPermissionDenied(Manifest.permission.ACCESS_FINE_LOCATION)
+    public void onBackgroundLocationDenied() {
+        Toast.makeText(this, "Background location denied", Toast.LENGTH_LONG).show();
+    }
+
+    @OnNeverAskAgain(Manifest.permission.ACCESS_FINE_LOCATION)
+    public void onBackgroundLocationNeverAskAgain() {
+        Toast.makeText(
+                this,
+                "App will never ask again for background location permissions",
+                Toast.LENGTH_SHORT
+        ).show();
+    }
+
+    @OnShowRationale(Manifest.permission.ACCESS_FINE_LOCATION)
+    public void showRationaleForBackgroundLocation(PermissionRequest request) {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder
+                .setPositiveButton(R.string.permissions_dialog_allow, (dialog, which) -> request.proceed())
+                .setNegativeButton(R.string.permissions_dialog_deny, (dialog, which) -> request.cancel())
+                .setCancelable(false)
+                .setMessage(R.string.permissions_dialog_rationale)
+                .show();
+    }
+
+    @Override
+    protected void onSaveInstanceState(final Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("mac", this.deviceMac);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(final Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        this.deviceMac = savedInstanceState.getString("mac");
+        showDeviceStats("MetaWear", this.deviceMac);
+    }
 }

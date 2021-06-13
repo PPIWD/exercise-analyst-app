@@ -1,8 +1,10 @@
 package pl.ppiwd.exerciseanalyst.activities;
 
-import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -14,20 +16,15 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import androidx.core.content.ContextCompat;
-import permissions.dispatcher.NeedsPermission;
-import permissions.dispatcher.OnNeverAskAgain;
-import permissions.dispatcher.OnPermissionDenied;
-import permissions.dispatcher.OnShowRationale;
-import permissions.dispatcher.PermissionRequest;
-import permissions.dispatcher.RuntimePermissions;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import pl.ppiwd.exerciseanalyst.BuildConfig;
 import pl.ppiwd.exerciseanalyst.R;
 import pl.ppiwd.exerciseanalyst.activities.utils.ServerConnection;
+import pl.ppiwd.exerciseanalyst.common.BroadcastMsgs;
 import pl.ppiwd.exerciseanalyst.common.Constants;
 import pl.ppiwd.exerciseanalyst.common.session.DeviceConnectionServiceChecker;
 import pl.ppiwd.exerciseanalyst.persistence.MeasurementsDatabase;
@@ -35,7 +32,6 @@ import pl.ppiwd.exerciseanalyst.persistence.dao.MeasurementsDao;
 import pl.ppiwd.exerciseanalyst.services.Timer;
 import pl.ppiwd.exerciseanalyst.services.metamotion.MetaMotionService;
 
-@RuntimePermissions
 public class TrainingDataActivity extends AppCompatActivity {
     private Spinner activitySpinner;
     private NumberPicker repetitionsPicker;
@@ -54,6 +50,15 @@ public class TrainingDataActivity extends AppCompatActivity {
             "Push ups"
     };
     private Intent deviceService;
+    private BroadcastReceiver metaWearBroadcastSink = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String message = (String)(intent.getExtras().get(BroadcastMsgs.MSG_KEY));
+            if(message.equals(BroadcastMsgs.METAMOTION_SERIVCE_START)) {
+                timer.reset();
+                timerHandler.post(timer);
+            }
+        }
+    };
 
     private void initialize() {
         this.timerHandler = new Handler();
@@ -77,6 +82,9 @@ public class TrainingDataActivity extends AppCompatActivity {
         this.serverConnection = getServerConnection();
         this.deviceConnectionServiceChecker = new DeviceConnectionServiceChecker(this);
         configureButton(deviceConnectionServiceChecker.isServiceRunning());
+
+        IntentFilter filter = new IntentFilter(BroadcastMsgs.ACTIVITY_BROADCAST_INTENT_ACTION);
+        LocalBroadcastManager.getInstance(this).registerReceiver(metaWearBroadcastSink, filter);
     }
 
     private ServerConnection getServerConnection() {
@@ -116,6 +124,8 @@ public class TrainingDataActivity extends AppCompatActivity {
             Toast.makeText(this, "Unfinished trainings dropped", Toast.LENGTH_SHORT).show();
             stopService(deviceService);
         }
+
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(metaWearBroadcastSink);
     }
 
     @Override
@@ -136,8 +146,6 @@ public class TrainingDataActivity extends AppCompatActivity {
     }
 
     private void handleSession() {
-        timer.reset();
-        timerHandler.post(timer);
         startMetaMotionService();
         configureButton(true);
     }
@@ -161,7 +169,6 @@ public class TrainingDataActivity extends AppCompatActivity {
         }
     }
 
-    @NeedsPermission(Manifest.permission.ACCESS_FINE_LOCATION)
     public void startMetaMotionService() {
         if (deviceConnectionServiceChecker.isServiceRunning()) {
             Toast.makeText(this, "Service is already running", Toast.LENGTH_SHORT).show();
@@ -174,7 +181,7 @@ public class TrainingDataActivity extends AppCompatActivity {
         deviceService.putExtra(Constants.ACTIVITY_NAME_KEY, activitySpinner.getSelectedItem().toString());
         deviceService.putExtra(Constants.REPETITIONS_COUNT_KEY, repetitionsPicker.getValue());
 
-        ContextCompat.startForegroundService(this,deviceService);
+        ContextCompat.startForegroundService(this, deviceService);
     }
 
     private void sendDataToServer() {
@@ -197,39 +204,6 @@ public class TrainingDataActivity extends AppCompatActivity {
         builder.setMessage("Training finished. Do you want to save training data?")
                 .setPositiveButton("Yes", dialogClickListener)
                 .setNegativeButton("No", dialogClickListener)
-                .show();
-    }
-
-    //Permissions handling below...
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        // NOTE: delegate the permission handling to generated method
-        TrainingDataActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
-    }
-
-    @OnPermissionDenied(Manifest.permission.ACCESS_FINE_LOCATION)
-    public void onBackgroundLocationDenied() {
-        Toast.makeText(this, "Background location denied", Toast.LENGTH_LONG).show();
-    }
-
-    @OnNeverAskAgain(Manifest.permission.ACCESS_FINE_LOCATION)
-    public void onBackgroundLocationNeverAskAgain() {
-        Toast.makeText(
-                this,
-                "App will never ask again for background location permissions",
-                Toast.LENGTH_SHORT
-        ).show();
-    }
-
-    @OnShowRationale(Manifest.permission.ACCESS_FINE_LOCATION)
-    public void showRationaleForBackgroundLocation(PermissionRequest request) {
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-        dialogBuilder
-                .setPositiveButton(R.string.permissions_dialog_allow, (dialog, which) -> request.proceed())
-                .setNegativeButton(R.string.permissions_dialog_deny, (dialog, which) -> request.cancel())
-                .setCancelable(false)
-                .setMessage(R.string.permissions_dialog_rationale)
                 .show();
     }
 }

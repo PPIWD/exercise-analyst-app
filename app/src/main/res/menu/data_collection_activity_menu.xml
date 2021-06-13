@@ -9,4 +9,7 @@
         android:checkable="true"
         android:title="@string/debug_mode"
         android:visibility="visible"/>
+    <item android:id="@+id/wipe_local_db"
+        android:title="@string/wipe_local_db"
+        app:showAsAction="never" />
 </menu>
